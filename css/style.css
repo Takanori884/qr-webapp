@@ -1,0 +1,11 @@
+/* video 要素を画面いっぱいに表示 */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+video {
+  width: 100%;
+  height: auto;
+  display: block;
+}

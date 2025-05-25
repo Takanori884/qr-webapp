@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QRコード読み取りアプリ</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- カメラ映像 -->
+  <video id="video" autoplay playsinline style="width:100%;height:auto;display:block;"></video>
+
+  <!-- 検出結果表示 -->
+  <div id="result" style="
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      padding: 8px;
+      border-radius: 4px;
+      display: none;
+  ">
+    <p>読み取り結果：<span id="result-text"></span></p>
+    <button id="resume-btn">再開</button>
+  </div>
+
+  <!-- jsQR ライブラリ（BarcodeDetector API 非対応ブラウザ用） -->
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+
+  <!-- 音声再生用ビープ -->
+  <audio id="beep-sound" src="beep.mp3" preload="auto"></audio>
+  
+  <!-- メインスクリプト -->
+  <script src="js/main.js"></script>
+</body>
+</html>
