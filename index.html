@@ -1,37 +1,22 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>QRコード読み取りアプリ</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>避難所運営支援メニュー</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- カメラ映像 -->
-  <video id="video" autoplay playsinline style="width:100%;height:auto;display:block;"></video>
+  <header class="top-header">
+    <img src="img/logo.png" alt="ロゴ" class="logo">
+  </header>
 
-  <!-- 検出結果表示 -->
-  <div id="result" style="
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(0,0,0,0.7);
-      color: #fff;
-      padding: 8px;
-      border-radius: 4px;
-      display: none;
-  ">
-    <p>読み取り結果：<span id="result-text"></span></p>
-    <button id="resume-btn">再開</button>
-  </div>
-
-  <!-- jsQR ライブラリ（BarcodeDetector API 非対応ブラウザ用） -->
-  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
-
-  <!-- 音声再生用ビープ -->
-  <audio id="beep-sound" src="beep.mp3" preload="auto"></audio>
-  
-  <!-- メインスクリプト -->
-  <script src="js/main.js"></script>
+  <main class="menu-screen">
+    <h1 class="title">避難所運営支援メニュー</h1>
+    <div class="button-group">
+      <a href="menu1.html" class="menu-button">入退所手続き</a>
+      <a href="menu2.html" class="menu-button">食料・物資の支給手続き</a>
+    </div>
+  </main>
 </body>
 </html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>入退所手続き</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- ヘッダー：トップ画面に戻るボタン -->
+  <header class="sub-header">
+    <a href="index.html" class="back-button">メニュー</a>
+  </header>
+
+  <!-- メイン画面：カメラ映像＋読み取り結果＋アクションボタン -->
+  <main class="camera-screen">
+    <!-- カメラ映像 -->
+    <video
+      id="video"
+      class="camera-video"
+      autoplay
+      playsinline
+    ></video>
+
+    <!-- 読み取り結果表示（非表示→検出時に表示） -->
+    <div id="result" class="result" style="display:none;">
+      読み取り結果：<span id="result-text"></span>
+    </div>
+
+    <!-- 入退所ボタン（非表示→検出時に表示） -->
+    <div id="action-buttons" class="action-buttons" style="display:none;">
+      <button id="enter-btn" class="action-button">入所</button>
+      <button id="exit-btn"  class="action-button">退所</button>
+    </div>
+  </main>
+
+  <!-- ビープ音 -->
+  <audio id="beep-sound" src="beep.mp3" preload="auto"></audio>
+
+  <!-- QRライブラリ & メインスクリプト -->
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
