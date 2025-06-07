@@ -1,38 +1,39 @@
 // js/main.js
 
-// HTML要素取得
-const videoElem      = document.getElementById("video");
-const resultDiv      = document.getElementById("result");
-const resultText     = document.getElementById("result-text");
-const actionButtons  = document.getElementById("action-buttons");
-const enterBtn       = document.getElementById("enter-btn");
-const exitBtn        = document.getElementById("exit-btn");
-const beepSound      = document.getElementById("beep-sound");
-
-// BarcodeDetector API 対応チェック
-const formats  = ["qr_code"];
-const detector = ("BarcodeDetector" in window)
-  ? new BarcodeDetector({ formats })
-  : null;
+// HTML要素の取得
+const videoElem     = document.getElementById("video");
+const resultDiv     = document.getElementById("result");
+const resultText    = document.getElementById("result-text");
+const actionButtons = document.getElementById("action-buttons");
+const enterBtn      = document.getElementById("enter-btn");
+const exitBtn       = document.getElementById("exit-btn");
+const beepSound     = document.getElementById("beep-sound");
 
 // Canvas生成
 const canvas = document.createElement("canvas");
 const ctx    = canvas.getContext("2d");
 
-// フラグ・タイマー
+// 制御フラグとタイマー
 let scanning = true;
 let inactivityTimer = null;
+let buttonTimer = null;  // ボタン表示タイマー
 
-// カメラ起動
+/**
+ * カメラを起動して映像ストリームを設定
+ */
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "user" } }
+      video: {
+        facingMode: { ideal: "user" },
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      }
     });
     videoElem.srcObject = stream;
     videoElem.addEventListener("loadeddata", () => {
       resetInactivityTimer();
-      scanLoop();
+      requestAnimationFrame(scanLoop);
     });
   } catch (err) {
     console.error("カメラ起動エラー:", err);
@@ -40,75 +41,84 @@ async function startCamera() {
   }
 }
 
-// スキャンループ
+/**
+ * フレームごとに QR コードをスキャン
+ */
 function scanLoop() {
   if (!scanning) return;
   if (videoElem.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
     return requestAnimationFrame(scanLoop);
   }
+
   canvas.width  = videoElem.videoWidth;
   canvas.height = videoElem.videoHeight;
-  ctx.drawImage(videoElem, 0, 0);
+  ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-  if (detector) {
-    detector.detect(imageData)
-      .then(barcodes => {
-        if (barcodes.length) {
-          handleDetect(barcodes[0].rawValue);
-        } else {
-          requestAnimationFrame(scanLoop);
-        }
-      })
-      .catch(err => {
-        console.error("BarcodeDetector エラー:", err);
-        requestAnimationFrame(scanLoop);
-      });
+  const code = jsQR(imageData.data, imageData.width, imageData.height);
+  if (code && code.data) {
+    handleDetect(code.data);
   } else {
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
-    if (code) {
-      handleDetect(code.data);
-    } else {
-      requestAnimationFrame(scanLoop);
-    }
+    requestAnimationFrame(scanLoop);
   }
 }
 
-// 読み取り成功時処理
+/**
+ * QR コード検出時の処理
+ */
 function handleDetect(data) {
   clearTimeout(inactivityTimer);
   scanning = false;
-  resultText.textContent = data;
-  resultDiv.style.display = "block";
+
+  // 読み取り結果を表示
+  resultText.textContent     = data;
+  resultDiv.style.display    = "block";
   actionButtons.style.display = "flex";
 
   // ビープ音再生
   beepSound.currentTime = 0;
   beepSound.play().catch(e => console.warn("音声再生失敗:", e));
+
+  // 10秒後にボタン非表示・再スキャン
+  clearTimeout(buttonTimer);
+  buttonTimer = setTimeout(() => {
+    resultDiv.style.display    = "none";
+    actionButtons.style.display = "none";
+    scanning = true;
+    resetInactivityTimer();
+    requestAnimationFrame(scanLoop);
+  }, 10000);
 }
 
-// 入所・退所ボタン処理
+/**
+ * 入所/退所ボタン押下時の処理
+ */
 function handleChoice(action) {
-  console.log(`${action} 処理開始`);
+  console.log(`${action} 処理実行`);
+
+  // ビープ音再生
   beepSound.currentTime = 0;
   beepSound.play();
 
-  // 表示リセット
-  actionButtons.style.display = "none";
-  resultDiv.style.display   = "none";
+  // ボタンタイマー解除
+  clearTimeout(buttonTimer);
 
-  // 10秒後に再スキャン
-  setTimeout(() => {
-    scanning = true;
-    resetInactivityTimer();
-    scanLoop();
-  }, 10000);
+  // UI 非表示
+  resultDiv.style.display    = "none";
+  actionButtons.style.display = "none";
+
+  // 即時再スキャン
+  scanning = true;
+  resetInactivityTimer();
+  requestAnimationFrame(scanLoop);
 }
 
 enterBtn.addEventListener("click", () => handleChoice("入所"));
 exitBtn.addEventListener("click", () => handleChoice("退所"));
 
-// 非アクティブタイマー設定
+/**
+ * 非アクティブ状態が1分続いたらトップ画面に戻る
+ */
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => {
