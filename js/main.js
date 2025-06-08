@@ -1,6 +1,6 @@
 // js/main.js
 
-// HTML要素の取得
+// HTML 要素の取得
 const videoElem     = document.getElementById("video");
 const resultDiv     = document.getElementById("result");
 const resultText    = document.getElementById("result-text");
@@ -9,14 +9,14 @@ const enterBtn      = document.getElementById("enter-btn");
 const exitBtn       = document.getElementById("exit-btn");
 const beepSound     = document.getElementById("beep-sound");
 
-// Canvas生成
+// 解析用 Canvas の生成
 const canvas = document.createElement("canvas");
 const ctx    = canvas.getContext("2d");
 
 // 制御フラグとタイマー
 let scanning = true;
 let inactivityTimer = null;
-let buttonTimer = null;  // ボタン表示タイマー
+let buttonTimer     = null;  // ボタン表示タイマー
 
 /**
  * カメラを起動して映像ストリームを設定
@@ -27,7 +27,8 @@ async function startCamera() {
       video: {
         facingMode: { ideal: "user" },
         width: { ideal: 640 },
-        height: { ideal: 480 }
+        height: { ideal: 480 },
+        frameRate: { ideal: 10, max: 15 }
       }
     });
     videoElem.srcObject = stream;
@@ -71,23 +72,24 @@ function handleDetect(data) {
   scanning = false;
 
   // 読み取り結果を表示
-  resultText.textContent     = data;
-  resultDiv.style.display    = "block";
+  resultText.textContent      = data;
+  resultDiv.style.display     = "block";
   actionButtons.style.display = "flex";
 
-  // ビープ音再生
+  // ビープ音再生（QR 検出用）
+  beepSound.src = "sound/beep1.mp3";
   beepSound.currentTime = 0;
   beepSound.play().catch(e => console.warn("音声再生失敗:", e));
 
-  // 10秒後にボタン非表示・再スキャン
+  // 5秒後にボタン非表示・再スキャン
   clearTimeout(buttonTimer);
   buttonTimer = setTimeout(() => {
-    resultDiv.style.display    = "none";
+    resultDiv.style.display     = "none";
     actionButtons.style.display = "none";
     scanning = true;
     resetInactivityTimer();
     requestAnimationFrame(scanLoop);
-  }, 10000);
+  }, 5000);
 }
 
 /**
@@ -96,34 +98,37 @@ function handleDetect(data) {
 function handleChoice(action) {
   console.log(`${action} 処理実行`);
 
-  // ビープ音再生
+  // ビープ音再生（ボタン用）
+  beepSound.src = "sound/beep2.mp3";
   beepSound.currentTime = 0;
-  beepSound.play();
+  beepSound.play().catch(e => console.warn("音声再生失敗:", e));
 
   // ボタンタイマー解除
   clearTimeout(buttonTimer);
 
   // UI 非表示
-  resultDiv.style.display    = "none";
+  resultDiv.style.display     = "none";
   actionButtons.style.display = "none";
 
-  // 即時再スキャン
-  scanning = true;
-  resetInactivityTimer();
-  requestAnimationFrame(scanLoop);
+  // 1秒後に再スキャンを再開
+  setTimeout(() => {
+    scanning = true;
+    resetInactivityTimer();
+    requestAnimationFrame(scanLoop);
+  }, 1000);
 }
 
 enterBtn.addEventListener("click", () => handleChoice("入所"));
 exitBtn.addEventListener("click", () => handleChoice("退所"));
 
 /**
- * 非アクティブ状態が1分続いたらトップ画面に戻る
+ * 非アクティブ状態が30秒続いたらトップ画面に戻る
  */
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => {
     window.location.href = "index.html";
-  }, 60000);
+  }, 30000);
 }
 
 // 初期化

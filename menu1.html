@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>入退所手続き</title>
+  <title>入退所の手続き</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- ヘッダー：トップ画面に戻るボタン -->
   <header class="sub-header">
-    <a href="index.html" class="back-button">メニュー</a>
+    <a href="index.html" class="back-button">メニューへ</a>
   </header>
 
   <!-- メイン画面：カメラ映像＋読み取り結果＋アクションボタン -->
   <main class="camera-screen">
+    <div class="camera-prompt">QRコードをカメラにかざしてください</div>
     <!-- カメラ映像 -->
     <video
       id="video"
@@ -29,8 +30,8 @@
 
     <!-- 入退所ボタン（非表示→検出時に表示） -->
     <div id="action-buttons" class="action-buttons" style="display:none;">
-      <button id="enter-btn" class="action-button">入所</button>
-      <button id="exit-btn"  class="action-button">退所</button>
+      <button id="enter-btn" class="action-button action-button-color1">入 る</button>
+      <button id="exit-btn"  class="action-button action-button-color2">出 る</button>
     </div>
   </main>
 

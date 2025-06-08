@@ -3,20 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>避難所運営支援メニュー</title>
+  <title>避難所の利用メニュー</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <header class="top-header">
-    <img src="img/logo.png" alt="ロゴ" class="logo">
-  </header>
+  <!-- ナビゲーション用ビープ -->
+  <audio id="nav-beep" src="sound/beep0.mp3" preload="auto"></audio>
 
   <main class="menu-screen">
-    <h1 class="title">避難所運営支援メニュー</h1>
+    <h1 class="menu-title">避難所の利用メニュー</h1>
     <div class="button-group">
-      <a href="menu1.html" class="menu-button">入退所手続き</a>
-      <a href="menu2.html" class="menu-button">食料・物資の支給手続き</a>
+      <a href="menu1.html" class="menu-button menu-button-color1">
+        <img src="img/pen.png" alt="入退所" class="button-illustration">
+        <span class="button-name">入る／出るを記録する</span>
+        <span class="button-desc">
+          避難所に来た／帰るときに<br>押してください
+        </span>
+      </a>
+      <a href="menu2.html" class="menu-button menu-button-color2">
+        <img src="img/box.png" alt="食事物資" class="button-illustration">
+        <span class="button-name">食料／物資を受け取る</span>
+        <span class="button-desc">
+          食べ物や配布品を<br>もらうときに使います
+        </span>
+      </a>
     </div>
+    <img src="img/logo.png" alt="ロゴ" class="logo">
   </main>
+
+  <!-- スクリプト -->
+  <script>
+    (function() {
+      const navBeep = document.getElementById('nav-beep');
+
+      function onNav(e) {
+        e.preventDefault();
+        // ビープ再生
+        navBeep.currentTime = 0;
+        navBeep.play().catch(() => {});
+        // 少し待ってから遷移
+        const target = this.getAttribute('href');
+        setTimeout(() => {
+          window.location.href = target;
+        }, 100);
+      }
+
+      function setupNavBeep() {
+        // キャッシュ復元後も再設定できるよう audio をリロード
+        navBeep.load();
+        document.querySelectorAll('.menu-button').forEach(btn => {
+          // 既存のリスナを外してから
+          btn.removeEventListener('click', onNav);
+          btn.removeEventListener('touchend', onNav);
+          // click と touchend の両方を登録
+          btn.addEventListener('click', onNav);
+          btn.addEventListener('touchend', onNav);
+        });
+      }
+
+      window.addEventListener('DOMContentLoaded', setupNavBeep);
+      window.addEventListener('pageshow', setupNavBeep);
+    })();
+  </script>
 </body>
 </html>
