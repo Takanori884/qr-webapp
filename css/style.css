@@ -10,6 +10,13 @@ html, body {
   font-family: sans-serif;
   box-sizing: border-box;
 }
+.main-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: scale(0.8) translate(-50%, -50%);
+  transform-origin: top left;
+}
 *, *::before, *::after {
   box-sizing: inherit;
 }
