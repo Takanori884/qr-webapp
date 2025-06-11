@@ -15,17 +15,11 @@
   <!-- メイン画面：カメラ映像＋読み取り結果＋アクションボタン -->
   <main class="camera-screen">
     <div class="camera-prompt">QRコードをカメラにかざしてください</div>
-    <!-- カメラ映像 -->
-    <video
-      id="video"
-      class="camera-video"
-      autoplay
-      playsinline
-    ></video>
 
-    <!-- 読み取り結果表示（非表示→検出時に表示） -->
-    <div id="result" class="result" style="display:none;">
-      読み取り結果：&#12288;<span id="result-text"></span>
+    <!-- カメラ映像とオーバーレイをまとめる -->
+    <div class="camera-container">
+      <video id="video" class="camera-video" autoplay playsinline></video>
+      <div id="overlay-result" class="overlay-result"></div>
     </div>
 
     <!-- 入退所ボタン（非表示→検出時に表示） -->
@@ -37,6 +31,28 @@
 
   <!-- ビープ音 -->
   <audio id="beep-sound" preload="auto"></audio>
+
+  <!-- mapping.json をクライアントに読み込む -->
+  <script>
+    let mapping = {};
+    async function loadMapping(force = false) {
+      let url = 'mapping.json';
+      if (force) url += '?_=' + Date.now();
+      try {
+        const res = await fetch(url);
+        mapping = await res.json();
+        console.log('mapping loaded', mapping);
+      } catch (e) {
+        console.error('mapping.json ロード失敗', e);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadMapping();
+      console.log('mapping loaded, now start camera');
+      startCamera();
+    });
+  </script>
 
   <!-- QRライブラリ & メインスクリプト -->
   <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>

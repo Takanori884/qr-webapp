@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ツール設定</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="sub-header">
+    <a href="index.html" class="back-button">メニューへ</a>
+  </header>
+
+  <main class="settings-screen">
+    <h2>スプレッドシートのURL設定とデータ更新</h2>
+
+    <!-- URL入力と保存ボタン -->
+    <div class="url-group">
+      <input type="url" id="sheetUrlInput" placeholder="スプレッドシートの URL を入力してください">
+      <button id="saveUrlButton">保存</button>
+    </div>
+
+    <!-- mapping.json 更新ボタン -->
+    <button id="refresh-mapping" class="update-button">読み込みデータ更新</button>
+  </main>
+
+  <script>
+    // ① ページ読み込み時にURLを表示
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedUrl = localStorage.getItem('spreadsheetURL');
+      if (savedUrl) {
+        document.getElementById('sheetUrlInput').value = savedUrl;
+      }
+    });
+
+    // ② URL保存処理
+    document.getElementById('saveUrlButton').addEventListener('click', () => {
+      const url = document.getElementById('sheetUrlInput').value;
+      if (url) {
+        localStorage.setItem('spreadsheetURL', url);
+        alert('スプレッドシートURLを保存しました。');
+      }
+    });
+
+    // ③ mapping.json を更新する関数（menu1.html から移植）
+    async function loadMapping(force = false) {
+      let url = 'mapping.json';
+      if (force) url += '?_=' + Date.now(); // キャッシュ回避
+      try {
+        const res = await fetch(url);
+        const mapping = await res.json();
+        console.log('mapping loaded', mapping);
+      } catch (e) {
+        console.error('mapping.json ロード失敗', e);
+        throw e;
+      }
+    }
+
+    // ④ 更新ボタン押下で mapping.json を再取得
+    document.getElementById('refresh-mapping').addEventListener('click', async () => {
+      try {
+        await loadMapping(true); // 強制再読み込み
+        alert('データを最新に更新しました');
+      } catch {
+        alert('更新に失敗しました');
+      }
+    });
+  </script>
+</body>
+</html>

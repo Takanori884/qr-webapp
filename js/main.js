@@ -1,9 +1,16 @@
 // js/main.js
 
-// API エンドポイントの URL（Apps Script ウェブアプリのもの）
-const API_URL = 'https://script.google.com/macros/s/AKfycby-RoIjRko6kX5RZL6vorcokQBVlsdoo96WWMQbPo8JtHFvkhXw81Z7AnBK9iuQYDmF/exec';
+// API エンドポイントの URL
+const API_URL = localStorage.getItem('spreadsheetURL');
 
-// JSONP 用ヘルパー関数
+if (!API_URL) {
+  console.warn("スプレッドシートURLが設定されていません。settings.htmlで設定してください。");
+  alert("スプレッドシートのURLを先に設定してください。");
+} else {
+  loadMapping();
+}
+
+// JSONP用関数
 function jsonp(url, params) {
   return new Promise((resolve, reject) => {
     const callbackName = 'cb_' + Date.now();
@@ -27,18 +34,13 @@ function jsonp(url, params) {
   });
 }
 
-// QR コードから氏名を取得
-async function fetchName(qr) {
-  try {
-    const res = await jsonp(API_URL, { qr });
-    return res.name || '';
-  } catch (e) {
-    console.error('名前取得エラー:', e);
-    return '';
-  }
+// mapping.json 読み込み
+function fetchName(qr) {
+  const name = mapping[qr];
+  console.log('fetchName lookup:', qr, '→', name);
+  return name || '';
 }
 
-// QR コード・氏名・アクションをログに記録
 async function sendAction(qr, name, action) {
   try {
     await jsonp(API_URL, { qr, name, action });
@@ -47,45 +49,64 @@ async function sendAction(qr, name, action) {
   }
 }
 
-// 要素取得
-const videoElem     = document.getElementById('video');
-const resultDiv     = document.getElementById('result');
-const resultText    = document.getElementById('result-text');
-const actionButtons = document.getElementById('action-buttons');
-const enterBtn      = document.getElementById('enter-btn');
-const exitBtn       = document.getElementById('exit-btn');
-const beepSound     = document.getElementById('beep-sound');
+// DOM取得
+const videoElem       = document.getElementById('video');
+const actionButtons   = document.getElementById('action-buttons');
+const enterBtn        = document.getElementById('enter-btn');
+const exitBtn         = document.getElementById('exit-btn');
+const beepSound       = document.getElementById('beep-sound');
+const cameraPrompt    = document.querySelector('.camera-prompt');
+const overlayResult   = document.getElementById('overlay-result');
 
-// Canvas準備
+// canvas
 const canvas = document.createElement('canvas');
-const ctx    = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
-// フラグ・タイマー
+// 状態管理
 let scanning = true;
 let inactivityTimer = null;
-let buttonTimer     = null;
-let lastQr          = '';  // 最新のQR値を保持
+let buttonTimer = null;
+let lastQr = '';
 
-// UI制御関数
-function showResult(text, showButtons) {
-  resultText.textContent      = text;
-  resultText.dataset.qr       = lastQr;
-  resultDiv.style.display     = 'block';
-  actionButtons.style.display = showButtons ? 'flex' : 'none';
+// メッセージ制御
+function updateCameraPrompt(text, duration = 0) {
+  cameraPrompt.textContent = text;
+  if (duration > 0) {
+    setTimeout(() => {
+      cameraPrompt.textContent = 'QRコードをカメラにかざしてください';
+    }, duration);
+  }
 }
+
+// オーバーレイ制御
+function showOverlay(text, duration = 3000) {
+  overlayResult.textContent = text;
+  overlayResult.style.display = 'block';
+  if (duration > 0) {
+    setTimeout(() => {
+      overlayResult.style.display = 'none';
+    }, duration);
+  }
+}
+
+// ボタン非表示
 function hideResult() {
-  resultDiv.style.display     = 'none';
   actionButtons.style.display = 'none';
 }
+
+// スキャン再開
 function scheduleRescan(delay) {
   clearTimeout(buttonTimer);
   buttonTimer = setTimeout(() => {
     hideResult();
+    updateCameraPrompt('スキャンの準備ができました', 2000);
     scanning = true;
     resetInactivityTimer();
     requestAnimationFrame(scanLoop);
   }, delay);
 }
+
+// 自動戻りタイマー
 function resetInactivityTimer() {
   clearTimeout(inactivityTimer);
   inactivityTimer = setTimeout(() => {
@@ -93,13 +114,13 @@ function resetInactivityTimer() {
   }, 60000);
 }
 
-// QRスキャンループ
+// スキャンループ
 function scanLoop() {
   if (!scanning) return;
   if (videoElem.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
     return requestAnimationFrame(scanLoop);
   }
-  canvas.width  = videoElem.videoWidth;
+  canvas.width = videoElem.videoWidth;
   canvas.height = videoElem.videoHeight;
   ctx.drawImage(videoElem, 0, 0, canvas.width, canvas.height);
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -112,58 +133,65 @@ function scanLoop() {
   }
 }
 
-// QR検出時の処理
+// QR検出処理
 async function handleDetect(qr) {
-  clearTimeout(inactivityTimer);
+  console.log('読み取られた QR:', qr);
   scanning = false;
+  clearTimeout(inactivityTimer);
 
-  showResult('読み込み中…', false);
+  const name = await fetchName(qr);
 
-  // 検出ビープ
+  // ビープ音
   beepSound.src = 'sound/beep1.mp3';
   beepSound.currentTime = 0;
   beepSound.play().catch(() => {});
 
-  // 氏名取得
-  const name = await fetchName(qr);
-
   if (!name) {
-    showResult('未登録のコードです', false);
+    updateCameraPrompt('未登録のコードです', 2000);
+    showOverlay('未登録のコードです');
+    hideResult();
     scheduleRescan(2000);
   } else {
-    showResult(name, true);
+    updateCameraPrompt('「入る」か「出る」を押してください');
+    showOverlay(name);
+    actionButtons.style.display = 'flex';
     scheduleRescan(5000);
   }
 }
 
-// 入退所ボタン押下時の処理
+// ボタン押下処理
 async function handleChoice(label) {
   clearTimeout(buttonTimer);
   clearTimeout(inactivityTimer);
   hideResult();
 
-  // ボタンビープ
   beepSound.src = 'sound/beep2.mp3';
   beepSound.currentTime = 0;
   beepSound.play().catch(() => {});
 
-  // ログ送信
-  const actionCode = label === '入所' ? 1 : 0;
-  await sendAction(lastQr, resultText.textContent, actionCode);
+  updateCameraPrompt('記録しています...');
 
-  // 再スキャン予約
-  scheduleRescan(1000);
+  const actionCode = label === '入所' ? 1 : 0;
+  await sendAction(lastQr, overlayResult.textContent, actionCode);
+
+  updateCameraPrompt('スキャンの準備ができました', 2000);
+
+  setTimeout(() => {
+    scanning = true;
+    resetInactivityTimer();
+    requestAnimationFrame(scanLoop);
+  }, 1000);
 }
 
-// カメラ起動
+// カメラ開始
 async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         facingMode: { ideal: 'user' },
-        width:       { ideal: 640 },
-        height:      { ideal: 480 },
-        frameRate:   { ideal: 10, max: 10 }
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        frameRate: { ideal: 10, max: 10 }
       }
     });
     videoElem.srcObject = stream;
@@ -179,5 +207,4 @@ async function startCamera() {
 
 // イベント登録
 enterBtn.addEventListener('click', () => handleChoice('入所'));
-exitBtn.addEventListener('click',  () => handleChoice('退所'));
-window.addEventListener('DOMContentLoaded', startCamera);
+exitBtn.addEventListener('click', () => handleChoice('退所'));

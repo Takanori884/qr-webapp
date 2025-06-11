@@ -36,20 +36,27 @@ button {
   width: 100%;
   height: 100vh;
   background: white;
-  padding-bottom: 100px; /* ロゴ用の余白 */
+  padding-bottom: 100px;
   transform: scale(1.8);
   transform-origin: top left;
-  /* 拡大 */
   width: calc(100% / 1.8);
   height: calc(100vh / 1.8);
 }
 .tool-logo {
   position: absolute;
-  top: 20px;          /* 上からの余白 */
-  left: 20px;        /* 右からの余白 */
-  width: 100px;       /* お好みのサイズに調整してください */
+  top: 20px;
+  left: 20px;
+  width: 100px;
   height: auto;
-  z-index: 20;        /* ほか要素より前面に */
+  z-index: 20;
+}
+.settings-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 48px;
+  height: auto;
+  z-index: 30;
 }
 .menu-title {
   font-size: 2rem;
@@ -59,7 +66,7 @@ button {
 }
 .button-group {
   display: flex;
-  gap: 3rem;  /* ボタン間隔 */
+  gap: 3rem;
 }
 .menu-button {
   width: 260px;
@@ -99,7 +106,6 @@ button {
   text-align: center;
   line-height: 1.2;
 }
-/* ロゴを右下に固定 */
 .HIT_logo {
   position: absolute;
   bottom: 20px;
@@ -109,7 +115,7 @@ button {
 }
 
 /*──────────────────────────────────────
-   サブヘッダー (menu1.html, menu2.html)
+   サブヘッダー (settings.html, menu1.html, menu2.html)
 ──────────────────────────────────────*/
 .sub-header {
   position: fixed;
@@ -135,10 +141,64 @@ button {
 }
 
 /*──────────────────────────────────────
+   ツール設定画面 (settings.html)
+──────────────────────────────────────*/
+.settings-screen h2 {
+  text-align: center;
+}
+.settings-screen {
+  padding-top: 100px;
+}
+.settings-screen .url-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem auto 1rem;
+  width: 90%;
+  max-width: 700px;
+}
+.settings-screen .url-group input[type="url"] {
+  flex: 1;
+  height: 2.5rem;
+  padding: 0 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.settings-screen .url-group button#saveUrlButton {
+  flex-shrink: 0;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  background: #ccc;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  transition: transform 0.1s ease;
+}
+.settings-screen .url-group button#saveUrlButton:active {
+  transform: scale(1.05);
+}
+.settings-screen .update-button {
+  display: block;
+  margin: 1.5rem auto 1rem;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  background: #eee;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  transition: transform 0.1s ease;
+}
+.settings-screen .update-button:active {
+  transform: scale(1.05);
+}
+
+/*──────────────────────────────────────
    入退所の手続き画面 (menu1.html)
 ──────────────────────────────────────*/
 .camera-screen {
-  position: absolute;
+  position: relative;
   top: 50px;
   left: 0;
   right: 0;
@@ -158,27 +218,40 @@ button {
   text-align: center;
   color: blueviolet;
 }
-.camera-video {
+
+/* ▼ カメラとオーバーレイをまとめる */
+.camera-container {
+  position: relative;
   width: 100%;
   max-width: 640px;
-  height: auto;
+}
+.camera-video {
+  width: 640px;
+  height: 480px;
+  object-fit: cover;
 }
 @media screen and (orientation: landscape) {
   .camera-video {
-    width: 50%;
+    width: 100%;
   }
 }
-#result {
-  margin-top: 1rem;
-  background: rgba(0,0,0,0.7);
+.overlay-result {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.6);
   color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 1.5rem;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 2.5em;
+  z-index: 10;
+  display: none;
+  pointer-events: none;
 }
 .action-buttons {
-  display: none;  /* JSで表示制御 */
-  gap: 3rem;
+  display: none;
+  gap: 5rem;
   margin-top: 1rem;
 }
 .action-button {
@@ -203,7 +276,7 @@ button {
 ──────────────────────────────────────*/
 .under-construction-screen {
   position: absolute;
-  top: 50px;  /* ヘッダー下 */
+  top: 50px;
   left: 0;
   right: 0;
   bottom: 0;
